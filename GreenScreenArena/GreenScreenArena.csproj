@@ -13,6 +13,9 @@
 		<LangVersion>latest</LangVersion>
 		<ImplicitUsings>enable</ImplicitUsings>
 	</PropertyGroup>
+	<ItemGroup>
+	  <None Remove="Assets\livgreenscreen" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<Reference Include="Assembly-CSharp">
@@ -506,7 +509,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Assets\" />
+	  <EmbeddedResource Include="Assets\livgreenscreen" />
 	</ItemGroup>
 	
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
