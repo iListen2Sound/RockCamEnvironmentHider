@@ -1,6 +1,7 @@
 ﻿using MelonLoader;
 using RumbleModdingAPI;
 using UnityEngine;
+using System.Collections;
 //using System.Drawing;
 using UnityEngine.Rendering.UI;
 
@@ -42,11 +43,11 @@ namespace LivEnvironmentHider
 
 		
 
-		GameObject mapProduction;
+		GameObject CurrentMapProduction;
 		public override void OnInitializeMelon()
 		{
 			Calls.onAMapInitialized += OnMapInitialized;
-			Calls.onMatchStarted += OnMatchStarted;
+			
 			
 			if (!Directory.Exists(USER_DATA))
 				Directory.CreateDirectory(USER_DATA);
@@ -54,7 +55,7 @@ namespace LivEnvironmentHider
 			modCategory = MelonPreferences.CreateCategory(BuildInfo.Name);
 			modCategory.SetFilePath(Path.Combine(USER_DATA, CONFIG_FILE));
 
-			GreenScreenColor = modCategory.CreateEntry<string>("Green Screen Color", "#000000");
+			GreenScreenColor = modCategory.CreateEntry<string>("Green Screen Color", "#000000", null,"Plot Twist: Doesn't actually have to be green");
 
 			LoggerInstance.Msg("Initialized.");
 		}
@@ -77,9 +78,9 @@ namespace LivEnvironmentHider
 				child.SetActive(false);
 			}
 
-			BasePitMask.transform.localPosition = new Vector3(0, 0.39f, 0);
+			BasePitMask.transform.localPosition = new Vector3(-0.2f, 0f, 0);
 			BasePitMask.transform.localRotation = Quaternion.Euler(270, 0, 0);
-			BasePitMask.transform.localScale = new Vector3(44, 44, 44);
+			BasePitMask.transform.localScale = new Vector3(44.4f, 44.4f, 44.4f);
 
 			BaseCylinder.transform.localPosition = new Vector3(0, 0.39f, 0);
 			BaseCylinder.transform.localRotation = Quaternion.Euler(0, 0, 0);
@@ -90,47 +91,15 @@ namespace LivEnvironmentHider
 		}
 		private void OnMapInitialized(string sceneName)
 		{
-			CurrentScene = sceneName;
+			CurrentScene = sceneName.Trim().ToLower();
 			BuildDebugScreen();
 			
 			FirstLoad();
 
 			modCategory.LoadFromFile();
-			GameObject mapProduction = new();
 
+			MelonCoroutines.Start(HideFromLiv());
 
-			if (sceneName.Trim().ToLower() == "map1")
-			{
-				List<int> objectsToHide = new List<int> { 0, 2, 3, 4 };
-				GameObject arenaParent = Calls.GameObjects.Map1.Map1production.Mainstaticgroup.GetGameObject();
-				mapProduction = Calls.GameObjects.Map1.Map1production.GetGameObject();
-				for (int i = 0; i < arenaParent.transform.childCount; i++)
-				{
-					GameObject child = arenaParent.transform.GetChild(i).gameObject;
-					if (objectsToHide.Contains(i))
-					{
-						child.layer = NO_LIV_LAYER;
-					}
-				}
-			}
-
-
-			if(sceneName.Trim().ToLower() == "map0")
-			{
-				List<int> objectsToHide = new List<int> { 0, 1, 3, 4, 6 };
-				GameObject arenaParent = Calls.GameObjects.Map0.Map0production.Mainstaticgroup.GetGameObject();
-				mapProduction = Calls.GameObjects.Map0.Map0production.GetGameObject();
-				for (int i = 0; i < arenaParent.transform.childCount; i++)
-				{
-					GameObject child = arenaParent.transform.GetChild(i).gameObject;
-					if (objectsToHide.Contains(i))
-					{
-						child.layer = NO_LIV_LAYER;
-					}
-				}
-			}
-
-			this.mapProduction = mapProduction;
 			Color gsColor;
 
 			if (!ColorUtility.TryParseHtmlString(GreenScreenColor.Value, out gsColor))
@@ -144,29 +113,65 @@ namespace LivEnvironmentHider
 			derCylinder = GameObject.Instantiate(BaseCylinder);
 			derPitMask = GameObject.Instantiate(BasePitMask);
 
-			derCylinder.SetActive(sceneName.Trim().ToLower().Contains("map"));
-			derPitMask.SetActive(sceneName.Trim().ToLower() == "map1");
+			derCylinder.SetActive(CurrentScene.Contains("map"));
+			derPitMask.SetActive(CurrentScene == "map1");
 			
 
 			derCylinder.GetComponent<MeshRenderer>().material.color = gsColor;
 			derPitMask.GetComponent<MeshRenderer>().material.color = gsColor;
 
-			derCylinder.transform.SetParent(mapProduction.transform);
-			derPitMask.transform.SetParent(mapProduction.transform);
+			derCylinder.transform.SetParent(CurrentMapProduction.transform, true);
+			derPitMask.transform.SetParent(CurrentMapProduction.transform, true);
 
 		}
 
-		private void OnMatchStarted()
+		/// <summary>
+		/// Gives Rumblehud a chance to take portraits before moving map production layers
+		/// </summary>
+		/// <returns></returns>
+		private IEnumerator HideFromLiv()
 		{
+			GameObject mapProduction = new();
+			List<int> objectsToHide = new();
+			GameObject arenaParent;
+			GameObject tournamentScorer = GameObject.Find("NewTextGameObject(Clone)");
+			tournamentScorer.layer = NO_LIV_LAYER;
 
+			if (CurrentScene == "map0")
+			{
+				objectsToHide = new List<int> { 0, 1, 3, 4, 6 };
+				arenaParent = Calls.GameObjects.Map0.Map0production.Mainstaticgroup.GetGameObject();
+				mapProduction = Calls.GameObjects.Map0.Map0production.GetGameObject();
 
+			}
+			else if (CurrentScene == "map1")
+			{
+				objectsToHide = new List<int> { 0, 2, 3, 4 };
+				arenaParent = Calls.GameObjects.Map1.Map1production.Mainstaticgroup.GetGameObject();
+				mapProduction = Calls.GameObjects.Map1.Map1production.GetGameObject();
+			} 
+			else
+			{
+				arenaParent = new();
+			}
+			this.CurrentMapProduction = mapProduction;
 
+			yield return new WaitForSeconds(3);
+
+			for (int i = 0; i < arenaParent.transform.childCount; i++)
+			{
+				GameObject child = arenaParent.transform.GetChild(i).gameObject;
+				if (objectsToHide.Contains(i))
+				{
+					child.layer = NO_LIV_LAYER;
+				}
+			}
 		}
 		public override void OnUpdate()
 		{
-			if(mapProduction != null)
+			if(CurrentMapProduction != null)
 			{
-				DiffLog($"{mapProduction.activeSelf}");
+				DiffLog($"{CurrentMapProduction.activeSelf}");
 			}
 		}
 
