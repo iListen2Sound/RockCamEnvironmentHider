@@ -1,6 +1,7 @@
 ﻿using MelonLoader;
 using RumbleModdingAPI;
 using UnityEngine;
+//using System.Drawing;
 using UnityEngine.Rendering.UI;
 
 [assembly: MelonInfo(typeof(LivEnvironmentHider.LivEnvironmentHider), LivEnvironmentHider.BuildInfo.Name, LivEnvironmentHider.BuildInfo.Version, LivEnvironmentHider.BuildInfo.Author)]
@@ -36,12 +37,25 @@ namespace LivEnvironmentHider
 	
 
 		private GameObject ScreenPack;
-		private GameObject PitMask;
-		private GameObject Cylinder;
+		private GameObject BasePitMask;
+		private GameObject BaseCylinder;
+
+		
+
+		GameObject mapProduction;
 		public override void OnInitializeMelon()
 		{
 			Calls.onAMapInitialized += OnMapInitialized;
+			Calls.onMatchStarted += OnMatchStarted;
 			
+			if (!Directory.Exists(USER_DATA))
+				Directory.CreateDirectory(USER_DATA);
+
+			modCategory = MelonPreferences.CreateCategory(BuildInfo.Name);
+			modCategory.SetFilePath(Path.Combine(USER_DATA, CONFIG_FILE));
+
+			GreenScreenColor = modCategory.CreateEntry<string>("Green Screen Color", "#000000");
+
 			LoggerInstance.Msg("Initialized.");
 		}
 
@@ -49,22 +63,11 @@ namespace LivEnvironmentHider
 		{
 			if(!isFirstLoad) return;
 
-			//ArenaAlpha loc, rot, scale: 
-			//pos = -0.1692 0.0159 0.01
-			//localpos = 0 0.39 0
-			//Rot = 270 0 0
-			//scale = 44 44 44
-
-			//Cylinder loc, rot, scale:
-			//pos = -0.1692 0.0159 0.01
-			//localpos = 0 0.39 0
-			//rot = 0 0 0
-			//scale = 50 50 50
 			ScreenPack = GameObject.Instantiate(Calls.LoadAssetFromStream<GameObject>(this, "LivEnvironmentHider.Assets.livgreenscreen", "LivEnvironmentHider"));
 			GameObject.DontDestroyOnLoad(ScreenPack);
-			PitMask = ScreenPack.transform.GetChild(0).gameObject;
-			Cylinder = ScreenPack.transform.GetChild(2).gameObject;
-			ScreenPack.SetActive(true);
+			BasePitMask = ScreenPack.transform.GetChild(0).gameObject;
+			BaseCylinder = ScreenPack.transform.GetChild(2).gameObject;
+			ScreenPack.SetActive(false);
 
 			for(int i = 0; i < ScreenPack.transform.childCount; i++)
 			{
@@ -74,13 +77,13 @@ namespace LivEnvironmentHider
 				child.SetActive(false);
 			}
 
-			PitMask.transform.localPosition = new Vector3(0, 0.39f, 0);
-			PitMask.transform.localRotation = Quaternion.Euler(270, 0, 0);
-			PitMask.transform.localScale = new Vector3(44, 44, 44);
+			BasePitMask.transform.localPosition = new Vector3(0, 0.39f, 0);
+			BasePitMask.transform.localRotation = Quaternion.Euler(270, 0, 0);
+			BasePitMask.transform.localScale = new Vector3(44, 44, 44);
 
-			Cylinder.transform.localPosition = new Vector3(0, 0.39f, 0);
-			Cylinder.transform.localRotation = Quaternion.Euler(0, 0, 0);
-			Cylinder.transform.localScale = new Vector3(70, 70, 70);
+			BaseCylinder.transform.localPosition = new Vector3(0, 0.39f, 0);
+			BaseCylinder.transform.localRotation = Quaternion.Euler(0, 0, 0);
+			BaseCylinder.transform.localScale = new Vector3(70, 70, 70);
 
 
 			isFirstLoad = false;
@@ -92,10 +95,15 @@ namespace LivEnvironmentHider
 			
 			FirstLoad();
 
+			modCategory.LoadFromFile();
+			GameObject mapProduction = new();
+
+
 			if (sceneName.Trim().ToLower() == "map1")
 			{
 				List<int> objectsToHide = new List<int> { 0, 2, 3, 4 };
 				GameObject arenaParent = Calls.GameObjects.Map1.Map1production.Mainstaticgroup.GetGameObject();
+				mapProduction = Calls.GameObjects.Map1.Map1production.GetGameObject();
 				for (int i = 0; i < arenaParent.transform.childCount; i++)
 				{
 					GameObject child = arenaParent.transform.GetChild(i).gameObject;
@@ -105,10 +113,13 @@ namespace LivEnvironmentHider
 					}
 				}
 			}
+
+
 			if(sceneName.Trim().ToLower() == "map0")
 			{
 				List<int> objectsToHide = new List<int> { 0, 1, 3, 4, 6 };
 				GameObject arenaParent = Calls.GameObjects.Map0.Map0production.Mainstaticgroup.GetGameObject();
+				mapProduction = Calls.GameObjects.Map0.Map0production.GetGameObject();
 				for (int i = 0; i < arenaParent.transform.childCount; i++)
 				{
 					GameObject child = arenaParent.transform.GetChild(i).gameObject;
@@ -119,13 +130,44 @@ namespace LivEnvironmentHider
 				}
 			}
 
-			Cylinder.SetActive(sceneName.Trim().ToLower().Contains("map"));
-			PitMask.SetActive(sceneName.Trim().ToLower() == "map1");
+			this.mapProduction = mapProduction;
+			Color gsColor;
+
+			if (!ColorUtility.TryParseHtmlString(GreenScreenColor.Value, out gsColor))
+			{
+				Log($"Failed to parse color from: {GreenScreenColor.Value}", false, 2);
+				gsColor = Color.black;
+			}
+			GameObject derCylinder;
+			GameObject derPitMask;
+
+			derCylinder = GameObject.Instantiate(BaseCylinder);
+			derPitMask = GameObject.Instantiate(BasePitMask);
+
+			derCylinder.SetActive(sceneName.Trim().ToLower().Contains("map"));
+			derPitMask.SetActive(sceneName.Trim().ToLower() == "map1");
+			
+
+			derCylinder.GetComponent<MeshRenderer>().material.color = gsColor;
+			derPitMask.GetComponent<MeshRenderer>().material.color = gsColor;
+
+			derCylinder.transform.SetParent(mapProduction.transform);
+			derPitMask.transform.SetParent(mapProduction.transform);
+
+		}
+
+		private void OnMatchStarted()
+		{
+
+
+
 		}
 		public override void OnUpdate()
 		{
-			DiffLog($"");
-
+			if(mapProduction != null)
+			{
+				DiffLog($"{mapProduction.activeSelf}");
+			}
 		}
 
 
