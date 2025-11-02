@@ -113,7 +113,7 @@ namespace LivEnvironmentHider
 			//treat being in a different scene from the last as the first time the arena is loaded. Subsequent replays will have the same current scene and last scene
 			bool firstArenaLoad = CurrentScene != LastScene;
 			// Give rumble hud a chance to take the opponent's portraite when the map first loads
-            secondsToWait = (firstArenaLoad && hide) ? 0 : ((float) DelayEnvHide.Value);
+            secondsToWait = (!firstArenaLoad && hide) ? 0 : ((float) DelayEnvHide.Value);
 
 			yield return new WaitForSeconds(skipDelay ? 0 : secondsToWait);
 
