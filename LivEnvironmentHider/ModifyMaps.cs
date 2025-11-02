@@ -11,6 +11,9 @@ namespace LivEnvironmentHider
 	{
 		GameObject DerivedCylinder;
 		GameObject DerivedPitMask;
+
+		List<int> OriginalLayer = new();
+
 		private void CreateGreenScreens()
 		{
 			if(CurrentScene.Contains("map"))
@@ -45,7 +48,7 @@ namespace LivEnvironmentHider
 		/// Gives Rumblehud a chance to take portraits before moving map production layers
 		/// </summary>
 		/// <returns></returns>
-		private IEnumerator HideFromLiv()
+		private IEnumerator HideFromLiv(bool hide, bool skipDelay = false)
 		{
 			GameObject mapProduction;
 			List<int> objectsToHide;
@@ -54,9 +57,11 @@ namespace LivEnvironmentHider
 			int combatFloorIndex;
 			tournamentScorer.layer = NO_LIV_LAYER;
 
-			//TODO: Include combat floor in hiding when enabled in prefs
+
+			//Select game objects to hide according to the arena
 			if (CurrentScene == "map0")
 			{
+				//Add combat floor as last element so it can be removed from the list if hide combat floor is disabled.
 				objectsToHide = new List<int> { 0, 1, 3, 4, 6, /*combat floor:*/ 2 };
 				arenaParent = Calls.GameObjects.Map0.Map0production.Mainstaticgroup.GetGameObject();
 				mapProduction = Calls.GameObjects.Map0.Map0production.GetGameObject();
@@ -68,33 +73,50 @@ namespace LivEnvironmentHider
 				objectsToHide = new List<int> { 0, 2, 3, 4, /*combat floor:*/ 1 };
 				arenaParent = Calls.GameObjects.Map1.Map1production.Mainstaticgroup.GetGameObject();
 				mapProduction = Calls.GameObjects.Map1.Map1production.GetGameObject();
+				//Parent derived pit mask and cylinder so they get disabled along with the map production when a custom map is loaded
 				DerivedPitMask.transform.SetParent(mapProduction.transform, true);
+				DerivedPitMask.SetActive(!hide);
 			} 
 			else
 			{
+				//Exit if not in a combat map
 				yield break;
 			}
-
 			DerivedCylinder.transform.SetParent(mapProduction.transform, true);
+			DerivedCylinder.SetActive(!hide);
 
+			// Remove floor index from the objects to hide list
 			if (!HideFloor.Value)
 			{
 				objectsToHide.RemoveAt(objectsToHide.Count - 1);
 			}
-			this.CurrentMapProduction = mapProduction;
+			CurrentMapProduction = mapProduction;
 
-            float secondsToWait;
-            secondsToWait = CurrentScene == LastScene ? 0 : ((float) DelayEnvHide.Value);
+            float secondsToWait; 
+			//treat being in a different scene from the last as the first time the arena is loaded. Subsequent replays will have the same current scene and last scene
+			bool firstArenaLoad = CurrentScene == LastScene;
+			// Give rumble hud a chance to take the opponent's portraite when the map first loads
+            secondsToWait = (firstArenaLoad && hide) ? 0 : ((float) DelayEnvHide.Value);
 
-			yield return new WaitForSeconds(secondsToWait);
+			yield return new WaitForSeconds(skipDelay ? 0 : secondsToWait);
 
+			//Loop through arena parent's children. When a child's index is in the list of objectsToHide, set the layer accordingly.
 			for (int i = 0; i < arenaParent.transform.childCount; i++)
 			{
+				
 				GameObject child = arenaParent.transform.GetChild(i).gameObject;
+				Log($"Hide from LIV pre: {child.Name} layer: {child.layer}", true);
+				//Store the environment elements' original layers in a list.
+				if(firstArenaLoad && hide)
+				{
+					OriginalLayer.Add(child.layer);
+				}
 				if (objectsToHide.Contains(i))
 				{
-					child.layer = NO_LIV_LAYER;
+					// if hide is intended, set layer to hide from liv, otherwise, set it to the original layer value
+					child.layer = hide ? NO_LIV_LAYER : OriginalLayer[i];
 				}
+				Log($"Hide from LIV post: {child.Name} layer: {child.layer}", true)
 			}
 		}
     }
