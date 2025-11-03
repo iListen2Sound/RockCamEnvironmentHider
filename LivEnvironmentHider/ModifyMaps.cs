@@ -188,6 +188,11 @@ namespace LivEnvironmentHider
 
 		private void SetGreenSreenColor(string hexCode)
 		{
+			if(!isEnvHidden)
+							{
+				Log("SetGreenScreenColor: Can't change green screen colors when inactive", true, 1);
+				return;
+			}
 			Color gsColor;
 
 			if (!ColorUtility.TryParseHtmlString(hexCode, out gsColor))

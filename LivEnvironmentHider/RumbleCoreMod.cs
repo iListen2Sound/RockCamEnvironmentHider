@@ -91,6 +91,31 @@ namespace LivEnvironmentHider
 			{
 				ToggleEnvHide();
 			}
+			if (Input.GetKey(KeyCode.S) && DebugModeActive)
+			{
+				string colorHex = null;
+				if (Input.GetKeyDown(KeyCode.G)) colorHex = "#00FF00";
+				else if (Input.GetKeyDown(KeyCode.B)) colorHex = "#0000FF";
+				else if (Input.GetKeyDown(KeyCode.R)) colorHex = "#FF0000";
+				else if (Input.GetKeyDown(KeyCode.K)) colorHex = "#000000";
+				else if (Input.GetKeyDown(KeyCode.M)) colorHex = "#FF00FF";
+				else if (Input.GetKeyDown(KeyCode.W)) colorHex = "#FFFFFF";
+				else if (Input.GetKeyDown(KeyCode.Y)) colorHex = "#FFFF00";
+				else if (Input.GetKeyDown(KeyCode.C)) colorHex = "#00FFFF";
+				else if (Input.GetKeyDown(KeyCode.O)) colorHex = "#FFA500";
+				else if (Input.GetKeyDown(KeyCode.P)) colorHex = "#FFC0CB";
+				else if (Input.GetKeyDown(KeyCode.L)) colorHex = "#800080";
+				else if (Input.GetKeyDown(KeyCode.T)) colorHex = "#808080";
+				else if (Input.GetKeyDown(KeyCode.D)) colorHex = "#A52A2A";
+
+				if (colorHex != null)
+				{
+					DiffLog($"SetGreenSreenColor called with {colorHex}", true);
+					SetGreenSreenColor(colorHex);
+				}
+
+			}
+			
 		}
 	}
 }
