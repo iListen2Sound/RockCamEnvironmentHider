@@ -47,7 +47,7 @@ namespace LivEnvironmentHider
 			}
 		}
 
-		private GameObject GrabArenaParent()
+		private GameObject GrabArenaStaticGroup()
 		{
 			GameObject arenaParent;
 			if (CurrentScene == "map0")
@@ -97,7 +97,7 @@ namespace LivEnvironmentHider
 			}
 			GameObject mapProduction = GrabMapProduction();
 			List<int> objectsToHide;
-			GameObject arenaParent = GrabArenaParent();
+			GameObject arenaParent = GrabArenaStaticGroup();
 			GameObject tournamentScorer = GameObject.Find("NewTextGameObject(Clone)");
 			int combatFloorIndex;
 			if(tournamentScorer != null)
@@ -109,13 +109,13 @@ namespace LivEnvironmentHider
 			if (CurrentScene == "map0")
 			{
 				//Add combat floor as last element so it can be removed from the list if hide combat floor is disabled.
-				objectsToHide = new List<int> { 0, 1, 3, 4, 6, /*combat floor:*/ 2 };
+				objectsToHide = new List<int> { 0, 1, 3, 4, 6, };
 				
 
 			}
 			else if (CurrentScene == "map1")
 			{
-				objectsToHide = new List<int> { 0, 2, 3, 4, /*combat floor:*/ 1 };
+				objectsToHide = new List<int> { 0, 2, 3, 4 };
 				//Parent derived pit mask and cylinder so they get disabled along with the map production when a custom map is loaded
 				DerivedPitMask.transform.SetParent(mapProduction.transform, true);
 				DerivedPitMask.SetActive(hide);
@@ -127,24 +127,18 @@ namespace LivEnvironmentHider
 				yield break;
 			}
 
-			
-			
 			DerivedCylinder.transform.SetParent(mapProduction.transform, true);
 			DerivedCylinder.SetActive(hide);
 
-			// Remove floor index from the objects to hide list
-			if (!HideFloor.Value)
-			{
-				objectsToHide.RemoveAt(objectsToHide.Count - 1);
-			}
+			SetFloorVisibility(!hide);
+			
 			CurrentMapProduction = mapProduction;
 
             float secondsToWait; 
-			//treat being in a different scene from the last as the first time the arena is loaded. Subsequent replays will have the same current scene and last scene
+			//treat being in a different scene from the last as the first time the arena is loaded.
 			bool firstArenaLoad = CurrentScene != LastScene;
 			// Give rumble hud a chance to take the opponent's portraite when the map first loads
             secondsToWait = (!firstArenaLoad && hide) ? 0 : ((float) DelayEnvHide.Value);
-
 			yield return new WaitForSeconds(skipDelay ? 0 : secondsToWait);
 
 			//Loop through arena parent's children. When a child's index is in the list of objectsToHide, set the layer accordingly.
@@ -169,6 +163,20 @@ namespace LivEnvironmentHider
 			isEnvHidden = hide;
 			GreenScreenActive.Value = hide;
 			modCategory.SaveToFile();
+		}
+
+		private void SetFloorVisibility(bool isVisible)
+		{
+			GameObject floor;
+			if(CurrentScene == map0)
+			{
+				floor = GrabArenaStaticGroup().transform.GetChild(2);
+			}
+			else if (CurrentScene == map1)
+			{
+				floor = GrabArenaStaticGroup().transform.GetChild(1);
+			}
+			floor.layer = isVisible ? 9 : 23;
 		}
 
 
