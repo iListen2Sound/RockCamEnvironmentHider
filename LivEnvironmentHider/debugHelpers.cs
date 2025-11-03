@@ -11,7 +11,7 @@ namespace LivEnvironmentHider
 		private GameObject DebugUi;
 		private TextMeshPro DebugUiText;
 		private GameObject PlayerUi;
-		//Set to IsDebugMode.Value once preferences have been initialized
+		//Set to DebugModePref.Value once preferences have been initialized
 		private bool DebugModeActive = true;
 		/// <summary>
 		/// Creates a debug screen in front of the player 
@@ -64,6 +64,7 @@ namespace LivEnvironmentHider
 			{
 				case 0:
 					LoggerInstance.Msg(message);
+					break;
 				case 1:
 					LoggerInstance.Warning("Warn: " + message);
 					break;

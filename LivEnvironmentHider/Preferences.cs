@@ -24,7 +24,7 @@ namespace LivEnvironmentHider
 		private MelonPreferences_Entry<double> DelayEnvHide;
 
 		private MelonPreferences_Category Diagnostics;
-		private MelonPreferences_Entry<bool> IsDebugMode;
+		private MelonPreferences_Entry<bool> DebugModePref;
 
 
 		private void InitPreferences()
@@ -51,8 +51,8 @@ namespace LivEnvironmentHider
 			Diagnostics = MelonPreferences.CreateCategory("Diagnostic options");
 			Diagnostics.SetFilePath(Path.Combine(USER_DATA, CONFIG_FILE));
 
-			IsDebugMode = Diagnostics.CreateEntry("Enable Debug Mode", false, null, "Enables more verbose logging and other debugging helper tools");
-			DebugModeActive = IsDebugMode;
+			DebugModePref = Diagnostics.CreateEntry("Enable Debug Mode", false, null, "Enables more verbose logging and other debugging helper tools");
+			DebugModeActive = DebugModePref.Value;
 		}
 
 		private void UpdatePrefs()

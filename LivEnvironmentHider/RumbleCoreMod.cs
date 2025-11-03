@@ -56,11 +56,10 @@ namespace LivEnvironmentHider
 			CurrentScene = sceneName.Trim().ToLower();
 			isEnvHidden = false;
 			//BuildDebugScreen();
-
 			FirstLoad();
 
-			UpdatePrefs();
-
+			if(!isFirstLoad)
+				UpdatePrefs();
 
 			//ModifyMaps
 			CreateGreenScreens();
