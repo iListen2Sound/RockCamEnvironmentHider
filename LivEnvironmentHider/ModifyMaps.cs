@@ -24,12 +24,14 @@ namespace LivEnvironmentHider
 				
 				
 				DerivedCylinder = GameObject.Instantiate(BaseCylinder);
+				DerivedCylinder.transform.SetParent(GrabMapProduction().transform, true);
 				DerivedCylinder.SetActive(false);
 
 				if (CurrentScene == "map1")
 				{
 					
 					DerivedPitMask = GameObject.Instantiate(BasePitMask);
+					DerivedPitMask.transform.SetParent(GrabMapProduction().transform, true);
 					DerivedPitMask.SetActive(false);
 
 				}
@@ -133,7 +135,6 @@ namespace LivEnvironmentHider
 			{
 				objectsToHide = new List<int> { 0, 2, 3, 4 };
 				//Parent derived pit mask and cylinder so they get disabled along with the map production when a custom map is loaded
-				DerivedPitMask.transform.SetParent(mapProduction.transform, true);
 				DerivedPitMask.SetActive(!isVisible);
 			} 
 			else
@@ -142,7 +143,7 @@ namespace LivEnvironmentHider
 				return;
 			}
 
-			DerivedCylinder.transform.SetParent(mapProduction.transform, true);
+
 			DerivedCylinder.SetActive(!isVisible);
 
 			
@@ -173,15 +174,16 @@ namespace LivEnvironmentHider
 			}
 			SetFloorVisibility(isVisible);
 
-
 			isEnvHidden = !isVisible;
-			GreenScreenActive.Value = !isVisible;
+			
 			modCategory.SaveToFile();
 		}
 
 		private void ToggleEnvHide()
 		{
+			GreenScreenActive.Value = !isEnvHidden;
 			SetEnvironmentVisibility(isEnvHidden);
+			
 		}
 
 		private void SetGreenSreenColor(string hexCode)
