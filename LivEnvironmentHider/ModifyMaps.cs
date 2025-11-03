@@ -21,26 +21,15 @@ namespace LivEnvironmentHider
 		{
 			if(CurrentScene.Contains("map"))
 			{
-				Color gsColor;
-
-				if (!ColorUtility.TryParseHtmlString(GreenScreenColor.Value, out gsColor))
-				{
-					Log($"Failed to parse color from: {GreenScreenColor.Value}", false, 2);
-					gsColor = Color.black;
-				}
-
+				SetGreenSreenColor(GreenScreenColor.Value);
 				
 				DerivedCylinder = GameObject.Instantiate(BaseCylinder);
 				DerivedCylinder.SetActive(GreenScreenActive.Value);
-				DerivedCylinder.GetComponent<MeshRenderer>().material.color = gsColor;
-				
-
 
 				if (CurrentScene == "map1")
 				{
 					
 					DerivedPitMask = GameObject.Instantiate(BasePitMask);
-					DerivedPitMask.GetComponent<MeshRenderer>().material.color = gsColor;
 					DerivedPitMask.SetActive(GreenScreenActive.Value);
 
 				}
@@ -282,10 +271,30 @@ namespace LivEnvironmentHider
 			SetEnvironmentVisibility(isEnvHidden);
 		}
 
+		private void SetGreenSreenColor(string hexCode)
+		{
+			Color gsColor;
+
+			if (!ColorUtility.TryParseHtmlString(hexCode, out gsColor))
+			{
+				Log($"Failed to parse color from: {hexCode}", false, 2);
+				gsColor = GreenScreenColor.Value;
+				return;
+			}
+
+			if(DerivedPitMask != null)
+				DerivedPitMask.GetComponent<MeshRenderer>().material.color = gsColor;
+			if(DerivedCylinder != null)
+				DerivedCylinder.GetComponent<MeshRenderer>().material.color = gsColor;
+
+			GreenScreenColor.Value = hexcode
+			modCategory.SaveToFile();
+		}
 		private IEnumerator DelayEnvironmentHiding()
 		{
 			yield return new WaitForSeconds(DelayEnvHide.Value);
 			SetEnvironmentVisibility(false);
 		}
+
     }
 }
