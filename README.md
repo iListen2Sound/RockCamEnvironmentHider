@@ -10,14 +10,14 @@ Applied at scene load
 | Option | Default | Description|
 | --- |  --- | --- |
 | Green Screen Active | true | |
-| Green Screen Color | #00FF00 | Hex code for color you want your green screen to be. This will be the same color you use in OBS's chroma key filter
+| Green Screen Color | #FF00FF| Hex code for color you want your green screen to be. This will be the same color you use in OBS's chroma key filter
 | Hide Combat Floor | false | Hides the combat floor from LIV
 | Hide Combat Ring | false | Hides the combat ring clamp from LIV |
 
 ### Keyboard inputs
 | Option | Default | Description|
 | --- |  --- | --- |
-|Modifier Key| S | Use with color keys to change screen color (will overwrite your default green screen color preference) |
+|Modifier Key| LeftAlt | Use with color keys to change screen color (will overwrite your default green screen color preference) |
 
 #### Control keys
 | Key | Action |
@@ -38,6 +38,6 @@ Applied at scene load
 ### Compatibility with other mods
 | Option | Default | Description|
 | --- |  --- | --- |
-| Hide Environment Delay | 0.5 | Delay in seconds for hiding the map environment. Too short of a delay will make the environment visible in your opponent's rumble hud portrait
+| Hide Environment Delay | 2.0 | Delay in seconds for hiding the map environment. Too short of a delay will make the environment visible in your opponent's rumble hud portrait
 
 

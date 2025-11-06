@@ -55,7 +55,7 @@ namespace LivEnvironmentHider
 
 			CatCompat = MelonPreferences.CreateCategory("Compatability with other mods");
 			CatCompat.SetFilePath(Path.Combine(USER_DATA, CONFIG_FILE));
-			PrefDelayEnvHide = CatCompat.CreateEntry("Hide Environment Delay", 0.5, null, "Delay in seconds for hiding map environment from Liv. Needed for Rumble HUD's portrait creation");
+			PrefDelayEnvHide = CatCompat.CreateEntry("Hide Environment Delay", 2.0, null, "Delay in seconds for hiding map environment from Liv. Needed for Rumble HUD's portrait creation");
 
 			CatDiagnostics = MelonPreferences.CreateCategory("Diagnostic options");
 			CatDiagnostics.SetFilePath(Path.Combine(USER_DATA, CONFIG_FILE));
