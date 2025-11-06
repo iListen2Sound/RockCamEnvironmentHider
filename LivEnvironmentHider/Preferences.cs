@@ -40,7 +40,7 @@ namespace LivEnvironmentHider
 			}
 
 
-			CatMain = MelonPreferences.CreateCategory(BuildInfo.Name);
+			CatMain = MelonPreferences.CreateCategory(BuildInfo.Name, BuildInfo.Name);	
 			CatMain.SetFilePath(Path.Combine(USER_DATA, CONFIG_FILE));
 			
 			PrefGreenScreenActive = CatMain.CreateEntry("Green Screen Active", true, null, "Activates or deactivates green screen function");
@@ -74,6 +74,7 @@ namespace LivEnvironmentHider
 			CatMain.LoadFromFile();
 			CatCompat.LoadFromFile();
 			CatDiagnostics.LoadFromFile();
+			DebugModeActive = PrefDebugMode.Value;
 		}
 		private void SavePrefs()
 		{

@@ -113,7 +113,7 @@ namespace LivEnvironmentHider
 			else if (CurrentScene == "map1")
 			{
 				floor = GrabArenaStaticGroup().transform.GetChild(1).gameObject;
-				DerivedPitMask.SetActive(isVisible);
+				DerivedPitMask.SetActive(!IsEnvVisible);
 			}
 			else
 			{ Log("SetFloorVisibility: unsupported map", true, 0); return; }
