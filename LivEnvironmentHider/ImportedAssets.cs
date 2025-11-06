@@ -31,7 +31,7 @@ namespace LivEnvironmentHider
 				child.SetActive(false);
 			}
 
-			BasePitMask.transform.localPosition = new Vector3(-0.2f, 0f, 0);
+			BasePitMask.transform.localPosition = new Vector3(-0.2f, 0.01f, 0);
 			BasePitMask.transform.localRotation = Quaternion.Euler(270, 0, 0);
 			BasePitMask.transform.localScale = new Vector3(44.4f, 44.4f, 44.4f); 
 

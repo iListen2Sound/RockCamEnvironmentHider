@@ -1,9 +1,12 @@
+using Il2CppInterop.Runtime;
+using Il2CppRUMBLE.Managers;
 using MelonLoader;
 using RumbleModdingAPI;
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 //using System.Drawing;
 using UnityEngine.Rendering.UI;
+using static Il2CppRootMotion.FinalIK.RagdollUtility;
 
 namespace LivEnvironmentHider
 {
@@ -11,31 +14,34 @@ namespace LivEnvironmentHider
 	{
 		GameObject DerivedCylinder;
 		GameObject DerivedPitMask;
+		Dictionary<GameObject, int> HideableObjectsToLayer;
 
 		List<int> OriginalLayer = new();
 
 		//Negate this variable in HideFromLiv to toggle hide status. Set to false when in gym or park
-		bool isEnvHidden = false;
+		bool IsEnvVisible = true;
+		bool IsFloorVisible = true;
+		bool IsRingVisible = true;
 
 		private void CreateGreenScreens()
 		{
-			if(CurrentScene.Contains("map"))
+			if (CurrentScene.Contains("map"))
 			{
-				
-				
+
+
 				DerivedCylinder = GameObject.Instantiate(BaseCylinder);
 				DerivedCylinder.transform.SetParent(GrabMapProduction().transform, true);
 				DerivedCylinder.SetActive(false);
 
 				if (CurrentScene == "map1")
 				{
-					
+
 					DerivedPitMask = GameObject.Instantiate(BasePitMask);
 					DerivedPitMask.transform.SetParent(GrabMapProduction().transform, true);
 					DerivedPitMask.SetActive(false);
 
 				}
-				SetGreenSreenColor(GreenScreenColor.Value);
+				//SetGreenSreenColor(PrefGreenScreenColor.Value);
 			}
 		}
 
@@ -49,10 +55,13 @@ namespace LivEnvironmentHider
 			else if (CurrentScene == "map1")
 			{
 				arenaParent = Calls.GameObjects.Map1.Map1production.Mainstaticgroup.GetGameObject();
-			} 
+			}
 			else
+			{
+				Log("GrabArenaStaticGroup: Current scene is not a supported map", false, 1);
 				return null;
-			
+			}
+
 			return arenaParent;
 		}
 
@@ -67,26 +76,32 @@ namespace LivEnvironmentHider
 			else if (CurrentScene == "map1")
 			{
 				mapProduction = Calls.GameObjects.Map1.Map1production.GetGameObject();
-			} 
+			}
 			else
+			{
+				Log("GrabMapProduction: Current scene is not a supported map", false, 1);
 				return null;
-			
+			}
+
 			return mapProduction;
 		}
 
 		private void SetFloorVisibility(bool isVisible)
 		{
 			GameObject floor;
-			if(CurrentScene == "map0")
+			if (CurrentScene == "map0")
 			{
 				floor = GrabArenaStaticGroup().transform.GetChild(2).gameObject;
 			}
 			else if (CurrentScene == "map1")
 			{
 				floor = GrabArenaStaticGroup().transform.GetChild(1).gameObject;
+				DerivedPitMask.SetActive(isVisible);
 			}
-			else return;
+			else
+			{ Log("SetFloorVisibility: unsupported map", true, 0); return; }
 			floor.layer = isVisible ? 9 : 23;
+			IsFloorVisible = isVisible;
 		}
 
 		private void SetRingVisibility(bool isVisible)
@@ -100,96 +115,179 @@ namespace LivEnvironmentHider
 			{
 				ring = GrabArenaStaticGroup().transform.GetChild(5).gameObject;
 			}
-			else return;
-				ring.layer = isVisible ? 0 : 23;
+			else
+			{ Log("SetRingVisibility: unsupported map", true, 0); return; }
+			ring.layer = isVisible ? 0 : 23;
+			IsRingVisible = isVisible;
 		}
 
-
-		private void SetEnvironmentVisibility(bool isVisible, bool manualCall = false)
+		private Dictionary<GameObject, int> GrabHideableObjects()
 		{
-			Log($"SetEnvVis: CurrentScene is {CurrentScene}", true, 0);
-			if (isEnvHidden == !isVisible)
-			{
-				Log($"SetEnvVis: Environment is already {(isVisible ? "visible" : "hidden")}. Breaking out of coroutine", false, 1);
-
-			}
-			GameObject mapProduction = GrabMapProduction();
-			List<int> objectsToHide;
-			GameObject arenaParent = GrabArenaStaticGroup();
-			GameObject tournamentScorer = GameObject.Find("NewTextGameObject(Clone)");
-			int combatFloorIndex;
-			if(tournamentScorer != null)
-				tournamentScorer.layer = NO_LIV_LAYER;
-			
-
-			//Select game objects to hide according to the arena
-			
+			Dictionary<GameObject, int> hideableObjectsToLayer = new();
+			List<string> hideableNames = new();
 			if (CurrentScene == "map0")
 			{
-				//Add combat ring as last element so it can be removed from the list if hide combat ring is disabled.
-				objectsToHide = new List<int> { 0, 1, 3, 4, 6, };
+				hideableNames = new List<string> { "Background plane", "Backgroundrocks", "Gutter", "leave", "Root" };
 				
 
 			}
 			else if (CurrentScene == "map1")
 			{
-				objectsToHide = new List<int> { 0, 2, 3, 4 };
-				//Parent derived pit mask and cylinder so they get disabled along with the map production when a custom map is loaded
-				DerivedPitMask.SetActive(!isVisible);
-			} 
+				hideableNames = new List<string> { "Cliff", "Deathdert", "Leaves_Map2", "Outherboundry" };
+
+			}
 			else
 			{
-				isEnvHidden = false;
+				Log("GrabHideableObjects: Current scene is not a supported map", true, 1);
+				return null;
+			}
+
+			GameObject arenaParent = GrabArenaStaticGroup();
+
+			//Iterate through arena parent children. Add children with hideable indices to dictionary awith its original layer property
+			for (int i = 0; i < arenaParent.transform.childCount; i++)
+			{
+
+				GameObject child = arenaParent.transform.GetChild(i).gameObject;
+				if (hideableNames.Contains(child.name))
+				{
+					hideableObjectsToLayer.Add(child, child.layer);
+				}
+			}
+
+			
+
+			return hideableObjectsToLayer;
+
+		}
+
+
+		private void SetEnvironmentVisibility(bool isVisible, bool manualCall = false)
+		{
+			if (!CurrentScene.Contains("map"))
+			{
+				Log("SetEnvVis: Current Scene is not a supported map");
+				return;
+			}
+			Log($"SetEnvVis: CurrentScene is {CurrentScene}", true, 0);
+			if (IsEnvVisible == isVisible)
+			{
+				Log($"SetEnvVis: Environment is already {(isVisible ? "visible" : "hidden")}.", false, 1);
 				return;
 			}
 
+			GameObject tournamentScorer = GameObject.Find("NewTextGameObject(Clone)");
+			if (tournamentScorer != null)
+				tournamentScorer.layer = NO_LIV_LAYER;
+
+
+			
+
+
 
 			DerivedCylinder.SetActive(!isVisible);
+			if (CurrentScene == "map1")
+				DerivedPitMask.SetActive(!isVisible);
 
-			
-			
-			CurrentMapProduction = mapProduction;
-
-
-			//Loop through arena parent's children. When a child's index is in the list of objectsToHide, set the layer accordingly.
-			for (int i = 0; i < arenaParent.transform.childCount; i++)
+			Dictionary<GameObject, int> hideablesToLayer = manualCall ? HideableObjectsToLayer : GrabHideableObjects();
+			foreach (KeyValuePair<GameObject, int> entry in hideablesToLayer)
 			{
-				
-				GameObject child = arenaParent.transform.GetChild(i).gameObject;
-				Log($"SetEnvVis pre: {child.name} layer: {child.layer}", true);
-				//Store the environment elements' original layers in a list only on the first load.
-				if(!manualCall) //Firstload is the wrong variable to check here. Only reason it's successful is because the initial indices are already there and never cleared.
-					//Skip delay would be better but the name isn't descriptive. Need to rename to something that reflects the fact that it's used when you change the hid state without first loading the arena
-				{
-					OriginalLayer.Add(child.layer);
-					if(child.layer == LIV_ONLY_LAYER)
-						Log($"SetEnvVis: Found arena element set to no liv layer about to be added to OriginalLayer<int>. Possible logic error", true, 1);
-				}
-				if (objectsToHide.Contains(i))
-				{
-					// if hide is intended, set layer to hide from liv, otherwise, set it to the original layer value
-					child.layer = isVisible ? OriginalLayer[i] : NO_LIV_LAYER;
-				}
-				Log($"SetEnvVis: {child.name} layer: {child.layer}", true);
+				entry.Key.layer = isVisible ? entry.Value : NO_LIV_LAYER;
+				Log($"SetEnvVis: Setting {entry.Key.name} to layer {(isVisible ? entry.Value.ToString() : NO_LIV_LAYER.ToString())}", true);
 			}
-			SetFloorVisibility(isVisible);
 
-			isEnvHidden = !isVisible;
+			IsEnvVisible = isVisible;
+			if (isVisible)
+			{
+				SetFloorVisibility(isVisible);
+				SetRingVisibility(isVisible);
+			}
+			else
+			{
+				if (PrefHideFloor.Value)
+					SetFloorVisibility(isVisible);
+				if (PrefHideRingClamp.Value)
+					SetRingVisibility(isVisible);
+			}
+
+
+
 			
-			modCategory.SaveToFile();
+			PrefGreenScreenActive.Value = !isVisible;
+
+			SetGreenSreenColor(PrefGreenScreenColor.Value);
+			SavePrefs();
 		}
 
 		private void ToggleEnvHide()
 		{
-			GreenScreenActive.Value = !isEnvHidden;
-			SetEnvironmentVisibility(isEnvHidden);
-			
+			SetEnvironmentVisibility(!IsEnvVisible, true);
 		}
 
+		private void HideTimers()
+		{
+			GameObject timers = GameObject.Find("Timers");
+			HideAllChildren(timers);
+		}
+		private void HideMabels()
+		{
+			GameObject mabels = GameObject.Find("Mabels");
+			HideAllChildren(mabels);
+		}
+		private void HideNameTags()
+		{
+			try
+			{
+				foreach (Il2CppRUMBLE.Players.Player player in PlayerManager.Instance.AllPlayers)
+				{
+					GameObject nameTag = player.Controller.gameObject.transform.GetChild(9).gameObject;
+					Log($"HideNameTag: Name tag found for player {player.Data.GeneralData.PublicUsername}", true);
+					HideAllChildren(nameTag);
+				}
+			}
+			catch (System.Exception e)
+			{
+				Log("HideNameTags: " + e.Message, false, 2);
+			}
+		}
+		private void HideAllChildren(GameObject parent)
+		{
+			if(parent is null)
+			{
+				Log("HideAllChildren: Parent is null", true, 1);
+				return;
+			}
+			if(parent.transform.childCount == 0)
+			{
+				Log("HideAllChildren: Parent has no children to hide\n", true, 0);
+				return;
+			}
+			Log($"HideAllChildren: Hiding {parent.name} from LIV", true);
+			for (int i = 0; i < parent.transform.childCount; i++)
+			{
+				GameObject child = parent.transform.GetChild(i).gameObject;
+				child.layer = NO_LIV_LAYER;
+				
+				HideAllChildren(child);
+			}
+		}
+
+		private void ToggleFloorVis()
+		{
+			SetFloorVisibility(!IsFloorVisible);
+			PrefHideFloor.Value = !IsFloorVisible;
+			SavePrefs();
+		}
+		private void ToggleRingVis()
+		{
+			SetRingVisibility(!IsRingVisible);
+			PrefHideRingClamp.Value = !IsRingVisible;
+			SavePrefs();
+		}
 		private void SetGreenSreenColor(string hexCode)
 		{
-			if(!isEnvHidden)
-							{
+			if (IsEnvVisible)
+			{
 				Log("SetGreenScreenColor: Can't change green screen colors when inactive", true, 1);
 				return;
 			}
@@ -201,20 +299,32 @@ namespace LivEnvironmentHider
 				return;
 			}
 
-			if(DerivedPitMask != null)
+			if (DerivedPitMask != null)
 				DerivedPitMask.GetComponent<MeshRenderer>().material.color = gsColor;
-			if(DerivedCylinder != null)
+			if (DerivedCylinder != null)
 				DerivedCylinder.GetComponent<MeshRenderer>().material.color = gsColor;
 
-			GreenScreenColor.Value = hexCode;
-			if(hexCode != GreenScreenColor.Value)
-				modCategory.SaveToFile();
+			PrefGreenScreenColor.Value = hexCode;
+			if (hexCode != PrefGreenScreenColor.Value)
+				CatMain.SaveToFile();
+			SavePrefs();
+			Log("SetGreenScreenColor: Green screen color set to " + hexCode, true);
 		}
 		private IEnumerator DelayEnvironmentHiding()
 		{
-			yield return new WaitForSeconds((float) DelayEnvHide.Value);
+			yield return new WaitForSeconds((float)PrefDelayEnvHide.Value);
 			SetEnvironmentVisibility(false);
+			
+		}
+		private IEnumerator HideOtherMods()
+		{
+			
+			yield return new WaitForSeconds((float)PrefDelayEnvHide.Value);
+			HideTimers();
+			HideMabels();
+			HideNameTags();
+
 		}
 
-    }
+	}
 }

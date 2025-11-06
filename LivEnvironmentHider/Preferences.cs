@@ -14,17 +14,21 @@ namespace LivEnvironmentHider
 		private const string USER_DATA = $"UserData/{BuildInfo.Name}/";
 		private const string CONFIG_FILE = "config.cfg";
 
-		private MelonPreferences_Category modCategory;
-		private MelonPreferences_Entry<string> GreenScreenColor;
-		private MelonPreferences_Entry<bool> HideFloor;
-		private MelonPreferences_Entry<string> FloorBackgroundColor;
-		private MelonPreferences_Entry<bool> GreenScreenActive;
+		private MelonPreferences_Category CatMain;
+		private MelonPreferences_Entry<string> PrefGreenScreenColor;
+		private MelonPreferences_Entry<bool> PrefHideFloor;
+		private MelonPreferences_Entry<string> PrefFloorBackgroundColor;
+		private MelonPreferences_Entry<bool> PrefGreenScreenActive;
+		private MelonPreferences_Entry<bool> PrefHideRingClamp;
 
-		private MelonPreferences_Category Compat;
-		private MelonPreferences_Entry<double> DelayEnvHide;
+		private MelonPreferences_Category CatInput;
+		private MelonPreferences_Entry<string> PrefModifierKey;
 
-		private MelonPreferences_Category Diagnostics;
-		private MelonPreferences_Entry<bool> DebugModePref;
+		private MelonPreferences_Category CatCompat;
+		private MelonPreferences_Entry<double> PrefDelayEnvHide;
+
+		private MelonPreferences_Category CatDiagnostics;
+		private MelonPreferences_Entry<bool> PrefDebugMode;
 
 
 		private void InitPreferences()
@@ -36,30 +40,44 @@ namespace LivEnvironmentHider
 			}
 
 
-			modCategory = MelonPreferences.CreateCategory(BuildInfo.Name);
-			modCategory.SetFilePath(Path.Combine(USER_DATA, CONFIG_FILE));
+			CatMain = MelonPreferences.CreateCategory(BuildInfo.Name);
+			CatMain.SetFilePath(Path.Combine(USER_DATA, CONFIG_FILE));
 			
-			GreenScreenActive = modCategory.CreateEntry("Green Screen Active", true, null, "Activates or deactivates green screen function");
-			GreenScreenColor = modCategory.CreateEntry("Green Screen Color", "#000000", null, "Plot Twist: Doesn't actually have to be green. If using black (default) add a luma key filter to the LIV source in OBS.");
-			HideFloor = modCategory.CreateEntry("Hide Combat Floor", false, null, "Hides the combat floor from Liv.");
+			PrefGreenScreenActive = CatMain.CreateEntry("Green Screen Active", true, null, "Activates or deactivates green screen function");
+			PrefGreenScreenColor = CatMain.CreateEntry("Green Screen Color", "#FF00FF", null, "Plot Twist: Doesn't actually have to be green. If using black (default) add a luma key filter to the LIV source in OBS.");
+			PrefHideFloor = CatMain.CreateEntry("Hide Combat Floor", false, null, "Hides the combat floor from Liv.");
+			PrefHideRingClamp = CatMain.CreateEntry("Hide Ring Clamp", false, null, "Hides the ring clamp from Liv.");
+
+			CatInput = MelonPreferences.CreateCategory("Input");
+			CatInput.SetFilePath(Path.Combine(USER_DATA, CONFIG_FILE));
+			PrefModifierKey = CatInput.CreateEntry("Modifier Key", "LeftAlt", null, "Key to use as a modifier to use keyboard input (specify left or right when using actual modifier keys)");
 
 
-			Compat = MelonPreferences.CreateCategory("Compatability with other mods");
-			Compat.SetFilePath(Path.Combine(USER_DATA, CONFIG_FILE));
-			DelayEnvHide = Compat.CreateEntry("Hide Environment Delay", 2.0, null, "Delay in seconds for hiding map environment from Liv. Needed for Rumble HUD's portrait creation");
+			CatCompat = MelonPreferences.CreateCategory("Compatability with other mods");
+			CatCompat.SetFilePath(Path.Combine(USER_DATA, CONFIG_FILE));
+			PrefDelayEnvHide = CatCompat.CreateEntry("Hide Environment Delay", 0.5, null, "Delay in seconds for hiding map environment from Liv. Needed for Rumble HUD's portrait creation");
 
-			Diagnostics = MelonPreferences.CreateCategory("Diagnostic options");
-			Diagnostics.SetFilePath(Path.Combine(USER_DATA, CONFIG_FILE));
+			CatDiagnostics = MelonPreferences.CreateCategory("Diagnostic options");
+			CatDiagnostics.SetFilePath(Path.Combine(USER_DATA, CONFIG_FILE));
 
-			DebugModePref = Diagnostics.CreateEntry("Enable Debug Mode", false, null, "Enables more verbose logging and other debugging helper tools");
-			DebugModeActive = DebugModePref.Value;
+			PrefDebugMode = CatDiagnostics.CreateEntry("Enable Debug Mode", false, null, "Enables more verbose logging and other debugging helper tools");
+			DebugModeActive = PrefDebugMode.Value;
+
+			CatMain.SaveToFile();
+			CatInput.SaveToFile();
+			CatCompat.SaveToFile();
+			CatDiagnostics.SaveToFile();
 		}
 
-		private void UpdatePrefs()
+		private void ReadPrefs()
 		{
-			modCategory.LoadFromFile();
-			Compat.LoadFromFile();
-			Diagnostics.LoadFromFile();
+			CatMain.LoadFromFile();
+			CatCompat.LoadFromFile();
+			CatDiagnostics.LoadFromFile();
+		}
+		private void SavePrefs()
+		{
+			CatMain.SaveToFile();
 		}
 	}
 }
