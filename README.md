@@ -1,4 +1,4 @@
-# LivEnvironmentHider
+# RockCamGreenScreen
 
 Hides arena environment from the Rock Cam so that you can use chroma key or other green screen methods to overlay in OBS or use for video editing.
 
@@ -11,7 +11,8 @@ Hides arena environment from the Rock Cam so that you can use chroma key or othe
 Note: Hiding the environment from Rock cam also hides it from LIV
 
 ## Configuration 
-Applied at scene load
+UserData/RockCamGreenScreen/config.cfg
+
 ### Green screen options
 | Option | Default | Description|
 | --- |  --- | --- |

@@ -3,9 +3,9 @@ using Il2CppTMPro;
 using RumbleModdingAPI;
 using UnityEngine;
 
-namespace LivEnvironmentHider
+namespace RockCamGreenScreen
 {
-	public partial class LivEnvironmentHider
+	public partial class RockCamGreenScreen
 	{
 
 		private GameObject DebugUi;

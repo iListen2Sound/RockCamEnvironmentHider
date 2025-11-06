@@ -6,22 +6,22 @@ using System.Collections;
 using UnityEngine.Rendering.UI;
 using System.ComponentModel.Design;
 
-[assembly: MelonInfo(typeof(LivEnvironmentHider.LivEnvironmentHider), LivEnvironmentHider.BuildInfo.Name, LivEnvironmentHider.BuildInfo.Version, LivEnvironmentHider.BuildInfo.Author)]
+[assembly: MelonInfo(typeof(RockCamGreenScreen.RockCamGreenScreen), RockCamGreenScreen.BuildInfo.Name, RockCamGreenScreen.BuildInfo.Version, RockCamGreenScreen.BuildInfo.Author)]
 [assembly: MelonGame("Buckethead Entertainment", "RUMBLE")]
 [assembly: MelonAuthorColor(255, 87, 166, 80)]
 [assembly: MelonColor(255, 87, 166, 80)]
 
 
-namespace LivEnvironmentHider
+namespace RockCamGreenScreen
 {
 	public static class BuildInfo
 	{
-		public const string Name = "LivEnvironmentHider";
+		public const string Name = "RockCamGreenScreen";
 		public const string Author = "iListen2Sound";
 		public const string Version = "1.0.0";
 	}
 
-	public partial class LivEnvironmentHider : MelonMod
+	public partial class RockCamGreenScreen : MelonMod
 	{
 
 		private string LastScene = "";
