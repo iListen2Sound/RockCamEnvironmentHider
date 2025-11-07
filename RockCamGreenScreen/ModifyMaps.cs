@@ -4,9 +4,6 @@ using MelonLoader;
 using RumbleModdingAPI;
 using System.Collections;
 using UnityEngine;
-//using System.Drawing;
-using UnityEngine.Rendering.UI;
-using static Il2CppRootMotion.FinalIK.RagdollUtility;
 
 namespace RockCamGreenScreen
 {
@@ -43,7 +40,7 @@ namespace RockCamGreenScreen
 				DerivedFullFloorMask.transform.SetParent(EnvironmentHider.transform, true);
 				DerivedFullFloorMask.SetActive(false);
 
-				if(CurrentScene == "map0")
+				if (CurrentScene == "map0")
 				{
 					DerivedFullFloorMask.transform.localPosition = new Vector3(-0.2f, -0.277f, 0);
 				}
@@ -113,11 +110,15 @@ namespace RockCamGreenScreen
 			else if (CurrentScene == "map1")
 			{
 				floor = GrabArenaStaticGroup().transform.GetChild(1).gameObject;
-				DerivedPitMask.SetActive(!IsEnvVisible);
+				//Set pit mask active only if environment is hidden while floor is visible
+				DerivedPitMask.SetActive(isVisible && !IsEnvVisible);
 			}
 			else
 			{ Log("SetFloorVisibility: unsupported map", true, 0); return; }
+			//9 is default floor layer
 			floor.layer = isVisible ? 9 : NO_LIV_LAYER;
+
+
 			DerivedFullFloorMask.SetActive(!isVisible);
 			IsFloorVisible = isVisible;
 		}
@@ -139,6 +140,10 @@ namespace RockCamGreenScreen
 			IsRingVisible = isVisible;
 		}
 
+		/// <summary>
+		/// Creates a dictionary of objects meant to be hidden in each map with their default layer property
+		/// </summary>
+		/// <returns></returns>
 		private Dictionary<GameObject, int> GrabHideableObjects()
 		{
 			Dictionary<GameObject, int> hideableObjectsToLayer = new();
@@ -146,7 +151,7 @@ namespace RockCamGreenScreen
 			if (CurrentScene == "map0")
 			{
 				hideableNames = new List<string> { "Background plane", "Backgroundrocks", "Gutter", "leave", "Root" };
-				
+
 
 			}
 			else if (CurrentScene == "map1")
@@ -172,14 +177,11 @@ namespace RockCamGreenScreen
 					hideableObjectsToLayer.Add(child, child.layer);
 				}
 			}
-
-			
-
 			return hideableObjectsToLayer;
 
 		}
 
-
+		 
 		private void SetEnvironmentVisibility(bool isVisible, bool manualCall = false)
 		{
 			if (!CurrentScene.Contains("map"))
@@ -194,27 +196,28 @@ namespace RockCamGreenScreen
 				return;
 			}
 
+			//Find tournament scorer game object and hide it from LIV if present.
 			GameObject tournamentScorer = GameObject.Find("NewTextGameObject(Clone)");
 			if (tournamentScorer != null)
 				tournamentScorer.layer = NO_LIV_LAYER;
 
-
-			
-
-
-
 			DerivedCylinder.SetActive(!isVisible);
+
+			//Derived pit mask is only used in PIT
 			if (CurrentScene == "map1")
 				DerivedPitMask.SetActive(!isVisible);
 
-			Dictionary<GameObject, int> hideablesToLayer = manualCall ? HideableObjectsToLayer : GrabHideableObjects();
-			foreach (KeyValuePair<GameObject, int> entry in hideablesToLayer)
+			
+			
+			foreach (KeyValuePair<GameObject, int> entry in HideableObjectsToLayer)
 			{
 				entry.Key.layer = isVisible ? entry.Value : NO_LIV_LAYER;
 				Log($"SetEnvVis: Setting {entry.Key.name} to layer {(isVisible ? entry.Value.ToString() : NO_LIV_LAYER.ToString())}", true);
 			}
 
 			IsEnvVisible = isVisible;
+
+
 			if (isVisible)
 			{
 				SetFloorVisibility(isVisible);
@@ -227,10 +230,6 @@ namespace RockCamGreenScreen
 				if (PrefHideRingClamp.Value)
 					SetRingVisibility(isVisible);
 			}
-
-
-
-			
 			PrefGreenScreenActive.Value = !isVisible;
 
 			SetGreenSreenColor(PrefGreenScreenColor.Value);
@@ -268,14 +267,19 @@ namespace RockCamGreenScreen
 				Log("HideNameTags: " + e.Message, false, 2);
 			}
 		}
+
+		/// <summary>
+		/// Recursively go through child objects and set their layer to NO_LIV_LAYER
+		/// </summary>
+		/// <param name="parent"></param>
 		private void HideAllChildren(GameObject parent)
 		{
-			if(parent is null)
+			if (parent is null)
 			{
 				Log("HideAllChildren: Parent is null", true, 1);
 				return;
 			}
-			if(parent.transform.childCount == 0)
+			if (parent.transform.childCount == 0)
 			{
 				Log("HideAllChildren: Parent has no children to hide\n", true, 0);
 				return;
@@ -285,7 +289,7 @@ namespace RockCamGreenScreen
 			{
 				GameObject child = parent.transform.GetChild(i).gameObject;
 				child.layer = NO_LIV_LAYER;
-				
+
 				HideAllChildren(child);
 			}
 		}
@@ -302,6 +306,9 @@ namespace RockCamGreenScreen
 			PrefHideRingClamp.Value = !IsRingVisible;
 			SavePrefs();
 		}
+
+
+
 		private void SetGreenSreenColor(string hexCode)
 		{
 			if (IsEnvVisible)
@@ -321,24 +328,26 @@ namespace RockCamGreenScreen
 				DerivedPitMask.GetComponent<MeshRenderer>().material.color = gsColor;
 			if (DerivedCylinder != null)
 				DerivedCylinder.GetComponent<MeshRenderer>().material.color = gsColor;
-			if(DerivedFullFloorMask != null)
+			if (DerivedFullFloorMask != null)
 				DerivedFullFloorMask.GetComponent<MeshRenderer>().material.color = gsColor;
 
-			PrefGreenScreenColor.Value = hexCode;
 			if (hexCode != PrefGreenScreenColor.Value)
-				CatMain.SaveToFile();
-			SavePrefs();
+			{
+				PrefGreenScreenColor.Value = hexCode;
+				SavePrefs();
+			}
+
 			Log("SetGreenScreenColor: Green screen color set to " + hexCode, true);
 		}
 		private IEnumerator DelayEnvironmentHiding()
 		{
 			yield return new WaitForSeconds((float)PrefDelayEnvHide.Value);
 			SetEnvironmentVisibility(false);
-			
+
 		}
 		private IEnumerator HideOtherMods()
 		{
-			
+
 			yield return new WaitForSeconds((float)PrefDelayEnvHide.Value);
 			HideTimers();
 			HideMabels();

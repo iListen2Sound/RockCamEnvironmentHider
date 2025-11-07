@@ -9,7 +9,10 @@ Hides arena environment from the Rock Cam so that you can use chroma key or othe
 - Selectively hide combat floor and ring clamp
 
 ## Configuration 
-UserData/RockCamGreenScreen/config.cfg
+
+(Generated automatically on first run)
+
+`UserData/RockCamGreenScreen/config.cfg`
 
 ### Green screen options
 | Option | Default | Description|
@@ -20,6 +23,8 @@ UserData/RockCamGreenScreen/config.cfg
 | Hide Combat Ring | false | Hides the combat ring clamp from the Rock Cam |
 
 ### Keyboard inputs
+All keyboard inputs are Modifier key + Control key/Color key
+
 | Option | Default | Description|
 | --- |  --- | --- |
 |Modifier Key| LeftAlt | Can be any key. Not just Alt/Ctrl/Shift |
