@@ -1,7 +1,4 @@
 using MelonLoader;
-using RumbleModdingAPI;
-using UnityEngine;
-using System.Collections;
 //using System.Drawing;
 using UnityEngine.Rendering.UI;
 

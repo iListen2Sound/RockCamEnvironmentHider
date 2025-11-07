@@ -1,7 +1,6 @@
 using MelonLoader;
 using RumbleModdingAPI;
 using UnityEngine;
-using System.Collections;
 //using System.Drawing;
 using UnityEngine.Rendering.UI;
 
@@ -15,7 +14,7 @@ namespace RockCamGreenScreen
 		private GameObject BasePitMask;
 		private GameObject BaseCylinder;
 		private GameObject BaseFullFloorMask;
-		
+
 
 		private void InitImportedAssets()
 		{

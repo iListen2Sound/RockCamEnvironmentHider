@@ -1,10 +1,7 @@
 ﻿using MelonLoader;
 using RumbleModdingAPI;
 using UnityEngine;
-using System.Collections;
-//using System.Drawing;
-using UnityEngine.Rendering.UI;
-using System.ComponentModel.Design;
+
 
 [assembly: MelonInfo(typeof(RockCamGreenScreen.RockCamGreenScreen), RockCamGreenScreen.BuildInfo.Name, RockCamGreenScreen.BuildInfo.Version, RockCamGreenScreen.BuildInfo.Author)]
 [assembly: MelonGame("Buckethead Entertainment", "RUMBLE")]
@@ -70,7 +67,7 @@ namespace RockCamGreenScreen
 				Log($"Unable to parse Modifier Key Config {PrefModifierKey.Value}", false, 2);
 			}
 			//ModifyMaps
-
+			//Grab hideable objects for current map and store their original layer values
 			HideableObjectsToLayer = GrabHideableObjects();
 			if(CurrentScene.Contains("map"))
 				MelonCoroutines.Start(HideOtherMods());
